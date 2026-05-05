@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地震學第三章：地震波在地球內部的傳遞</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 深淺色主題變數 */
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #2c3e50;
+            --nav-bg: #1a252f;
+            --nav-text: #ecf0f1;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --primary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --border-color: #e0e6ed;
+            --code-bg: #f8f9fa;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --nav-bg: #0a0a0a;
+            --nav-text: #ffffff;
+            --card-bg: #1e1e1e;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            --primary-color: #4da3ff;
+            --accent-color: #ff6b6b;
+            --border-color: #333333;
+            --code-bg: #2c2c2c;
+        }
+        
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; line-height: 1.7; transition: background-color 0.3s, color 0.3s; scroll-behavior: smooth; }
+        h1, h2, h3, h4 { color: var(--primary-color); }
+        h2 { border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-top: 0; }
+        p { margin-bottom: 1rem; }
+        strong { color: var(--accent-color); }
+        
+        /* 導覽列 */
+        nav { background-color: var(--nav-bg); color: var(--nav-text); padding: 15px 30px; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav h1 { margin: 0; font-size: 1.5rem; border: none; padding: 0; color: var(--nav-text); }
+        .theme-toggle { background: transparent; color: var(--nav-text); border: 1px solid var(--nav-text); padding: 5px 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .theme-toggle:hover { background: var(--nav-text); color: var(--nav-bg); }
+        
+        /* 佈局 */
+        .container { max-width: 1300px; margin: 0 auto; padding: 20px; display: flex; gap: 30px; }
+        .sidebar { width: 250px; flex-shrink: 0; position: sticky; top: 80px; height: calc(100vh - 100px); overflow-y: auto; background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: var(--card-shadow); }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        .sidebar ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar li { margin-bottom: 8px; }
+        .sidebar a { text-decoration: none; color: var(--text-color); font-size: 0.9rem; display: block; padding: 8px 10px; border-radius: 5px; transition: 0.2s; }
+        .sidebar a:hover, .sidebar a.active { background-color: var(--primary-color); color: white; }
+        
+        .content { flex-grow: 1; min-width: 0; }
+        section { background: var(--card-bg); padding: 40px; border-radius: 12px; box-shadow: var(--card-shadow); margin-bottom: 40px; scroll-margin-top: 90px; transition: transform 0.2s; }
+        
+        /* 互動元件共用 */
+        .interactive-box { background: var(--code-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 10px; margin: 20px 0; text-align: center; position: relative; }
+        button.btn { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; margin: 5px; transition: 0.2s; }
+        button.btn:hover { background: #1a5276; transform: translateY(-2px); }
+        
+        /* 卡片網格 */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+        .flip-card { background-color: transparent; height: 200px; perspective: 1000px; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: var(--card-shadow); }
+        .flip-card-front { background-color: var(--code-bg); color: var(--text-color); border: 2px solid var(--primary-color); }
+        .flip-card-front i { font-size: 2.5rem; color: var(--primary-color); margin-bottom: 10px; }
+        .flip-card-back { background-color: var(--primary-color); color: white; transform: rotateY(180deg); }
+        
+        /* 概念圖/波線示意圖 */
+        .svg-container { width: 100%; max-width: 600px; margin: 0 auto; background: var(--card-bg); border-radius: 50%; /* for earth */ }
+        .ray-path { fill: none; stroke-width: 3; stroke-linecap: round; transition: all 0.5s; opacity: 0; }
+        .ray-path.active { opacity: 1; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw 2s forwards; }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        
+        /* 圖說區塊 */
+        .figure-container { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
+        .figure-img { flex: 1; min-width: 300px; }
+        .figure-img img { width: 100%; border-radius: 8px; border: 1px solid var(--border-color); }
+        .figure-desc { flex: 1; min-width: 300px; background: var(--code-bg); padding: 20px; border-radius: 8px; border-left: 5px solid var(--primary-color); }
+        
+        /* 滑桿 */
+        .slider-container { margin: 20px 0; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        input[type="range"] { flex-grow: 1; max-width: 300px; }
+        .slider-value { background: var(--primary-color); color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; min-width: 80px; text-align: center; }
+
+        /* 回頂部 */
+        #backToTop { position: fixed; bottom: 30px; right: 30px; display: none; background: var(--accent-color); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.5rem; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; }
+        #backToTop:hover { transform: scale(1.1); }
+        
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; margin-bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h1><i class="fas fa-globe-americas"></i> 地震學第三章</h1>
+    <div>
+        <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i> 深淺色</button>
+    </div>
+</nav>
+
+<div class="container">
+    <aside class="sidebar">
+        <h3><i class="fas fa-list-ul"></i> 章節目錄</h3>
+        <ul id="toc">
+            <!-- JS 自動生成 -->
+        </ul>
+    </aside>
+    
+    <main class="content">
+
+        <!-- Section 1 -->
+        <section id="sec1">
+            <h2>1. 第三章整體導覽</h2>
+            <p>本章主軸在探討<strong>地震波如何在地球內部傳遞</strong>，以及我們如何利用地表接收到的震波資訊，反演出深不可測的地球內部構造。</p>
+            <div class="interactive-box">
+                <h3><i class="fas fa-sitemap"></i> 章節概念地圖</h3>
+                <p>地震學研究地球內部的核心邏輯如下：</p>
+                <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:10px; margin-top:20px;">
+                    <span class="btn" style="background:#34495e; color: white;">地震波路徑</span> <i class="fas fa-arrow-right"></i>
+                    <span class="btn" style="background:#34495e; color: white;">波速變化</span> <i class="fas fa-arrow-right"></i>
+                    <span class="btn" style="background:#34495e; color: white;">折射/反射現象</span> <i class="fas fa-arrow-right"></i>
+                    <span class="btn" style="background:#34495e; color: white;">定義不同波相</span> <br><br>
+                    <i class="fas fa-arrow-down" style="width:100%; text-align:center; font-size:20px;"></i>
+                    <span class="btn" style="background:#e67e22; color: white;">分析走時曲線</span> <i class="fas fa-arrow-right"></i>
+                    <span class="btn" style="background:#e67e22; color: white;">發現內部界面</span> <i class="fas fa-arrow-right"></i>
+                    <span class="btn" style="background:#c0392b; color: white; font-size:1.1rem;">建立地球內部構造模型</span>
+                </div>
+            </div>
+            <p><i class="fas fa-info-circle"></i> <strong>輔助理解：</strong> 就像醫生用超音波透視人體，地震學家利用地震波「透視」地球。波在不同材質中速度不同，遇到介面會反射折射，我們只要精準測量到達時間（走時），就能畫出地球內部的 3D 結構圖。</p>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="sec2">
+            <h2>2. Pg、Pn、PmP 波相說明</h2>
+            <p>在地殼與上部地函的近距離地震觀測中，我們最常分析以下三種波相。它們對於確認地殼厚度至關重要：</p>
+            <ul>
+                <li><strong>Pg (地殼直達波)</strong>：在地殼內直接傳播的 P 波。</li>
+                <li><strong>Pn (莫霍面首波/折射波)</strong>：沿著莫霍面 (Moho) 附近或上地函頂部高速層傳播的折射波。</li>
+                <li><strong>PmP (莫霍面反射波)</strong>：在地殼與地函交界的莫霍面發生反射的 P 波。</li>
+            </ul>
+            
+            <div class="interactive-box">
+                <h3>互動地殼剖面圖</h3>
+                <p>點擊按鈕查看不同波相的路徑。為何 Pn 在遠處會比 Pg 早到？因為它走了地函這條「高速公路」！</p>
+                <div>
+                    <button class="btn" onclick="showPhase('Pg')">顯示 Pg</button>
+                    <button class="btn" onclick="showPhase('Pn')">顯示 Pn</button>
+                    <button class="btn" onclick="showPhase('PmP')">顯示 PmP</button>
+                    <button class="btn" style="background:#7f8c8d" onclick="showPhase('all')">顯示全部</button>
+                </div>
+                <svg width="100%" height="200" style="background:#e8f4f8; margin-top:20px; border-radius:8px; max-width:600px;">
+                    <!-- 地表 -->
+                    <line x1="50" y1="50" x2="550" y2="50" stroke="#2c3e50" stroke-width="4"/>
+                    <text x="20" y="55" fill="#2c3e50" font-weight="bold">地表</text>
+                    <!-- Moho -->
+                    <line x1="50" y1="150" x2="550" y2="150" stroke="#e74c3c" stroke-width="3" stroke-dasharray="5,5"/>
+                    <text x="10" y="155" fill="#e74c3c" font-weight="bold">Moho</text>
+                    <!-- 震源與測站 -->
+                    <circle cx="100" cy="70" r="8" fill="#f39c12"/> <text x="85" y="90" font-size="12">震源</text>
+                    <polygon points="490,50 510,50 500,30" fill="#2980b9"/> <text x="485" y="25" font-size="12">測站</text>
+                    
+                    <!-- 路徑 -->
+                    <path id="path-Pg" d="M 100 70 L 500 50" stroke="#3498db" class="ray-path"/>
+                    <path id="path-PmP" d="M 100 70 L 300 150 L 500 50" stroke="#9b59b6" class="ray-path"/>
+                    <path id="path-Pn" d="M 100 70 L 150 150 L 450 150 L 500 50" stroke="#2ecc71" class="ray-path"/>
+                </svg>
+                <p id="phase-desc" style="margin-top:15px; font-weight:bold; color:var(--accent-color);">請點擊上方按鈕。</p>
+            </div>
+            <script>
+                function showPhase(phase) {
+                    document.querySelectorAll('.ray-path').forEach(el => el.classList.remove('active'));
+                    let desc = "";
+                    if(phase === 'Pg' || phase === 'all') { document.getElementById('path-Pg').classList.add('active'); desc = "Pg：走直線距離，但在地殼內速度較慢 (約 5.6 km/s)。"; }
+                    if(phase === 'Pn' || phase === 'all') { document.getElementById('path-Pn').classList.add('active'); desc = "Pn：雖然路徑較長，但上地函速度快 (約 8.0 km/s)，在遠距離 (交叉距離外) 會超越 Pg 成為最早到達的波。"; }
+                    if(phase === 'PmP' || phase === 'all') { document.getElementById('path-PmP').classList.add('active'); desc = "PmP：在 Moho 面反射，提供判斷地殼厚度 (Moho 深度) 的極佳約束。"; }
+                    if(phase === 'all') desc = "展示三種波相。超過交叉距離後，Pn 會成為初動波。";
+                    document.getElementById('phase-desc').innerText = desc;
+                }
+            </script>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="sec3">
+            <h2>3. 如何發現 Moho 面？</h2>
+            <p>1909 年，地震學家 <strong>Andrija Mohorovičić</strong> 在分析地震走時資料時，發現了一個驚人的現象：在距離震央一定距離之外，P 波的「表觀速度」突然變快了！這代表地震波往下傳遞時，遇到了一層波速顯著增加的介質。</p>
+            <p>這個地殼與地函之間的速度不連續面，後來被命名為 <strong>莫霍面 (Moho)</strong>。Pn 波的出現，正是下方存在高速地函介質的鐵證。</p>
+            
+            <div class="interactive-box">
+                <h3>走時曲線 (Travel-Time Curve) 概念示意</h3>
+                <p>橫軸為震央距，縱軸為到時。注意兩條直線交會的「交叉距離 (Cross-over distance)」。</p>
+                <svg width="100%" height="250" style="background:#fff; border:1px solid #ccc; max-width:600px;">
+                    <!-- 坐標軸 -->
+                    <line x1="40" y1="220" x2="500" y2="220" stroke="#000" stroke-width="2"/>
+                    <line x1="40" y1="220" x2="40" y2="20" stroke="#000" stroke-width="2"/>
+                    <text x="250" y="240" font-size="14">震央距 (Distance)</text>
+                    <text x="10" y="120" font-size="14" transform="rotate(-90 20,120)">到時 (Time)</text>
+                    
+                    <!-- Pg curve: 較陡 (慢速) -->
+                    <line x1="40" y1="220" x2="350" y2="30" stroke="#3498db" stroke-width="3"/>
+                    <text x="360" y="30" fill="#3498db" font-weight="bold">Pg (斜率 = 1/v0)</text>
+                    
+                    <!-- Pn curve: 較緩 (快速), 且有截距 -->
+                    <line x1="150" y1="180" x2="500" y2="80" stroke="#2ecc71" stroke-width="3"/>
+                    <text x="510" y="80" fill="#2ecc71" font-weight="bold">Pn (斜率 = 1/v1)</text>
+                    
+                    <!-- 虛線交會點 -->
+                    <line x1="223" y1="220" x2="223" y2="159" stroke="#e74c3c" stroke-dasharray="4,4"/>
+                    <text x="190" y="240" fill="#e74c3c">交叉距離 x_d</text>
+                </svg>
+                <p style="font-size:0.9rem; color:#666; margin-top:10px;">* 概念示意圖。在此距離前 Pg 先到，此距離後 Pn 先到。</p>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="sec4">
+            <h2>4. 全球 Moho 面深度分布</h2>
+            <p>Moho 面的深度在全球各地並不均勻，它反映了地殼厚度的差異。一般來說，地勢越高的區域，地殼根部越深，Moho 也就越深 (即 Airy 均勢假說)。</p>
+            <div class="grid">
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="fas fa-water"></i>
+                            <h3>海洋地殼</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>深度極淺</h3>
+                            <p>平均深度約 7 公里。在洋中脊處甚至更薄。玄武岩質，密度較高。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="fas fa-landmark"></i>
+                            <h3>大陸地殼 (穩定區)</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>中等深度</h3>
+                            <p>平均厚度約 30 - 40 公里。花崗岩質為主，年代古老且穩定。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <i class="fas fa-mountain"></i>
+                            <h3>造山帶 (如喜馬拉雅)</h3>
+                        </div>
+                        <div class="flip-card-back">
+                            <h3>深度極深</h3>
+                            <p>因板塊擠壓隆起，地殼厚度可達 70 公里以上，擁有極深的「山根」。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="sec5">
+            <h2>5. 什麼是射線參數 (Ray Parameter)?</h2>
+            <p>在地震波線追蹤中，<strong>射線參數 (Ray Parameter, 符號通常為 <i>p</i>)</strong> 是一個極為關鍵的概念。在水平分層或球對稱地球中，沿著同一條波線，這個數值是**守恆 (不變)** 的。</p>
+            <p>在球狀地球中，Snell 定律寫為： <strong>p = (r × sin i) / v</strong></p>
+            <ul>
+                <li><strong>r</strong>: 距地心半徑</li>
+                <li><strong>i</strong>: 入射角 (與半徑方向夾角)</li>
+                <li><strong>v</strong>: 該深度的波速</li>
+            </ul>
+            <p>物理意義：射線參數 <i>p</i> 等於走時曲線的斜率 (dT/dΔ)。當射線到達最深點 (觸底，i=90度，sin i = 1) 時，p = r / v。</p>
+            
+            <div class="interactive-box">
+                <h3>Ray Parameter 互動計算器</h3>
+                <p>假設地表半徑 r = 6371 km。拖曳滑桿觀察入射角改變時，p 值的變化。</p>
+                <div class="slider-container" style="justify-content:center;">
+                    <label>入射角 i (度):</label>
+                    <input type="range" id="angleSlider" min="0" max="90" value="30" oninput="calcRayParam()">
+                    <span class="slider-value" id="angleVal">30°</span>
+                </div>
+                <div class="slider-container" style="justify-content:center;">
+                    <label>地表波速 v (km/s):</label>
+                    <input type="range" id="velSlider" min="5" max="8" step="0.1" value="6.0" oninput="calcRayParam()">
+                    <span class="slider-value" id="velVal">6.0</span>
+                </div>
+                <h3 style="color:var(--accent-color);">計算結果 p = <span id="pResult">530.9</span> s/rad</h3>
+                <script>
+                    function calcRayParam() {
+                        const r = 6371;
+                        const i_deg = document.getElementById('angleSlider').value;
+                        const v = document.getElementById('velSlider').value;
+                        document.getElementById('angleVal').innerText = i_deg + "°";
+                        document.getElementById('velVal').innerText = v;
+                        
+                        const i_rad = i_deg * Math.PI / 180;
+                        const p = (r * Math.sin(i_rad)) / v;
+                        document.getElementById('pResult').innerText = p.toFixed(1);
+                    }
+                </script>
+            </div>
+        </section>
+
+        <!-- Section 6 -->
+        <section id="sec6">
+            <h2>6. 高速帶與多次到時 (Triplication)</h2>
+            <p>當地震波往下傳遞遇到速度<strong>隨深度快速增加</strong>的區域（例如地函過渡帶 410 km 或 660 km 不連續面）時，射線會發生強烈的向下彎曲與折射。這會導致一個奇特現象：從震源出發不同角度的波線，最終可能匯聚在同一個地面接收站！</p>
+            <p>在走時曲線上，這會形成所謂的 <strong>三叉現象 (Triplication)</strong> 或多分支結構，代表同一個測站在極短的時間內會記錄到多個相同震相 (但路徑不同) 的到達。</p>
+            
+            <div class="interactive-box">
+                <h3>三叉現象路徑示意</h3>
+                <svg width="100%" height="200" style="background:#fff; border:1px solid #ccc; max-width:600px;">
+                    <!-- 地表 -->
+                    <line x1="50" y1="30" x2="550" y2="30" stroke="#000" stroke-width="2"/> <text x="10" y="35">地表</text>
+                    <!-- 速度突增面 -->
+                    <rect x="50" y="120" width="500" height="60" fill="#e8f4f8"/>
+                    <line x1="50" y1="120" x2="550" y2="120" stroke="#3498db" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="10" y="125" fill="#2980b9" font-size="12">高速帶</text>
+                    
+                    <!-- 震源 -->
+                    <circle cx="100" cy="40" r="6" fill="#f39c12"/> <text x="80" y="60" font-size="12">震源</text>
+                    <!-- 測站 -->
+                    <polygon points="490,30 510,30 500,10" fill="#e74c3c"/> <text x="485" y="60" font-size="12" fill="#e74c3c">測站收3次</text>
+                    
+                    <!-- Path 1 (較淺, 正常底) -->
+                    <path d="M 100 40 Q 300 110 500 30" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                    <!-- Path 2 (較深, 進入高速區折射) -->
+                    <path d="M 100 40 C 200 130 400 130 500 30" fill="none" stroke="#e67e22" stroke-width="2"/>
+                    <!-- Path 3 (在介面反射) -->
+                    <path d="M 100 40 L 300 120 L 500 30" fill="none" stroke="#9b59b6" stroke-width="2"/>
+                </svg>
+                <p style="font-size:0.9rem; color:#666;">三條顏色不同的路徑，各自代表不同的出發角度，但最終都抵達同一個測站。</p>
+            </div>
+        </section>
+
+        <!-- Section 7 -->
+        <section id="sec7">
+            <h2>7. 低速帶與陰影區 (Shadow Zone)</h2>
+            <p>如果地震波遇到的是<strong>速度降低</strong>的區域（例如軟流圈低速帶，或核幔邊界），根據 Snell 定律，波線會向遠離水平面的方向彎折（往下掉）。這會使得地表某些距離範圍內，完全接收不到直接到達的地震波，形成所謂的 <strong>影區 (Shadow Zone)</strong>。</p>
+            
+            <div class="interactive-box">
+                <h3>切換模型：有無低速帶的影響</h3>
+                <button class="btn" onclick="toggleShadow('normal')">正常速度增加</button>
+                <button class="btn" onclick="toggleShadow('lowvel')" style="background:#e74c3c;">加入低速帶</button>
+                <div style="margin-top:20px;">
+                    <svg width="100%" height="220" style="background:#fff; border:1px solid #ccc; max-width:600px;">
+                        <line x1="50" y1="30" x2="550" y2="30" stroke="#000" stroke-width="2"/> <text x="10" y="35">地表</text>
+                        <!-- 低速帶區塊 -->
+                        <rect id="lz-rect" x="50" y="100" width="500" height="50" fill="#fce4ec" opacity="0"/>
+                        <text id="lz-text" x="10" y="125" fill="#d81b60" font-size="12" opacity="0">低速帶</text>
+                        
+                        <circle cx="100" cy="40" r="6" fill="#f39c12"/>
+                        
+                        <!-- 正常波線 -->
+                        <g id="paths-normal">
+                            <path d="M 100 40 Q 200 100 300 30" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                            <path d="M 100 40 Q 250 150 400 30" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                            <path d="M 100 40 Q 300 180 500 30" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                        </g>
+                        <!-- 低速帶波線 -->
+                        <g id="paths-lowvel" opacity="0">
+                            <path d="M 100 40 Q 200 100 300 30" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                            <!-- 遇到低速帶往下折，導致 300~500 之間沒有波 -->
+                            <path d="M 100 40 C 200 90 250 200 500 30" fill="none" stroke="#d81b60" stroke-width="2"/>
+                            <path d="M 100 40 C 220 90 280 220 540 30" fill="none" stroke="#d81b60" stroke-width="2"/>
+                            <rect x="310" y="20" width="180" height="15" fill="#333" opacity="0.2"/>
+                            <text x="350" y="15" fill="#e74c3c" font-size="12" font-weight="bold">Shadow Zone (收不到波)</text>
+                        </g>
+                    </svg>
+                </div>
+                <script>
+                    function toggleShadow(mode) {
+                        if(mode === 'normal') {
+                            document.getElementById('paths-normal').setAttribute('opacity', '1');
+                            document.getElementById('paths-lowvel').setAttribute('opacity', '0');
+                            document.getElementById('lz-rect').setAttribute('opacity', '0');
+                            document.getElementById('lz-text').setAttribute('opacity', '0');
+                        } else {
+                            document.getElementById('paths-normal').setAttribute('opacity', '0');
+                            document.getElementById('paths-lowvel').setAttribute('opacity', '1');
+                            document.getElementById('lz-rect').setAttribute('opacity', '1');
+                            document.getElementById('lz-text').setAttribute('opacity', '1');
+                        }
+                    }
+                </script>
+            </div>
+        </section>
+
+        <!-- Section 8 -->
+        <section id="sec8">
+            <h2>8. 如何發現核幔邊界 CMB？</h2>
+            <p>1906 年，Oldham 發現了 P波影區，這是地核存在的第一個直接證據。地球內部的核幔邊界 (Core-Mantle Boundary, CMB) 深度約 2890 公里，是一個極為劇烈的固-液邊界。</p>
+            <ul>
+                <li><strong>對 P 波：</strong> 外核是液態，P 波速度從約 13.7 km/s 暴跌至 8.0 km/s (巨大低速帶)，導致強烈向下折射，形成 98°–145° 的 <strong>P波影區</strong>。</li>
+                <li><strong>對 S 波：</strong> 液態外核的剪力模量為零，S 波完全無法穿透，因此 98° 之後整片都是 <strong>S波影區</strong>。</li>
+            </ul>
+            
+            <div class="interactive-box">
+                <h3>地球剖面：CMB 與影區示意</h3>
+                <div class="svg-container" style="background:transparent;">
+                    <svg viewBox="0 0 400 400" width="100%" height="300">
+                        <!-- 地函 -->
+                        <circle cx="200" cy="200" r="180" fill="#e8f4f8" stroke="#3498db" stroke-width="2"/>
+                        <!-- 外核 -->
+                        <circle cx="200" cy="200" r="98" fill="#fce4ec" stroke="#e74c3c" stroke-width="2"/>
+                        <text x="185" y="195" font-size="12" fill="#e74c3c">外核</text>
+                        <!-- 內核 -->
+                        <circle cx="200" cy="200" r="35" fill="#fcf3cf" stroke="#f39c12"/>
+                        <text x="185" y="225" font-size="10">內核</text>
+                        <!-- 震源 -->
+                        <circle cx="200" cy="20" r="5" fill="#000"/> <text x="185" y="12" font-size="12">EQ</text>
+                        <!-- P wave normal -->
+                        <path d="M 200 20 Q 300 100 375 240" fill="none" stroke="#2c3e50" stroke-width="1.5"/>
+                        <path d="M 200 20 Q 100 100 25 240" fill="none" stroke="#2c3e50" stroke-width="1.5"/>
+                        <!-- P wave refracted -->
+                        <path d="M 200 20 L 250 115 L 200 350" fill="none" stroke="#e74c3c" stroke-width="2"/>
+                        
+                        <!-- Shadow zone arc -->
+                        <path d="M 375 240 A 180 180 0 0 1 200 380" fill="none" stroke="#bdc3c7" stroke-width="10" opacity="0.5"/>
+                        <path d="M 25 240 A 180 180 0 0 0 200 380" fill="none" stroke="#bdc3c7" stroke-width="10" opacity="0.5"/>
+                        <text x="250" y="360" fill="#7f8c8d" font-size="14" font-weight="bold">P波影區</text>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 9 -->
+        <section id="sec9">
+            <h2>9. 體波波相字典</h2>
+            <p>地震學家用一套有系統的字母來命名地震波的路徑。將滑鼠游標移到以下卡片上，查看各波相的物理意義：</p>
+            <div class="grid">
+                <div class="flip-card"><div class="flip-card-inner">
+                    <div class="flip-card-front"><h3>P / S</h3><p>直達體波</p></div>
+                    <div class="flip-card-back"><p>從震源直接穿過地函到達測站的壓縮波(P)或剪力波(S)。</p></div>
+                </div></div>
+                <div class="flip-card"><div class="flip-card-inner">
+                    <div class="flip-card-front"><h3>pP / sP</h3><p>深度震相</p></div>
+                    <div class="flip-card-back"><p>小寫代表先往上打到地表反射，再往下傳。這對決定震源深度極為重要！</p></div>
+                </div></div>
+                <div class="flip-card"><div class="flip-card-inner">
+                    <div class="flip-card-front"><h3>PP / SS</h3><p>地表反射波</p></div>
+                    <div class="flip-card-back"><p>在地表反射一次的波，通常是最大走時相位，會產生 90 度相位偏移。</p></div>
+                </div></div>
+                <div class="flip-card"><div class="flip-card-inner">
+                    <div class="flip-card-front"><h3>PcP / ScS</h3><p>CMB 反射波</p></div>
+                    <div class="flip-card-back"><p>小寫 c 代表在核幔邊界 (CMB) 反射。ScS 在地震圖上通常非常清晰。</p></div>
+                </div></div>
+            </div>
+        </section>
+
+        <!-- Section 10 -->
+        <section id="sec10">
+            <h2>10. Core Phases 介紹</h2>
+            <p>若波相進入了地核，我們使用另一套字母來標示：<strong>K</strong> (外核 P 波)、<strong>I</strong> (內核 P 波)、<strong>J</strong> (內核 S 波)。</p>
+            <ul>
+                <li><strong>PKP</strong>: 穿透外核的 P 波。</li>
+                <li><strong>PKIKP</strong>: 直接貫穿地球靶心的波 (P波 -> 外核P波 -> 內核P波 -> 外核P波 -> 地函P波)。</li>
+                <li><strong>SKS</strong>: 在地函是 S波，進入液態外核只能以 P波 (K) 傳遞，出來又轉回 S波。這個波相對於測量各向異性非常有用。</li>
+            </ul>
+        </section>
+
+        <!-- Section 11 -->
+        <section id="sec11">
+            <h2>11. 什麼是 Antipodal Focusing (對蹠點聚焦)?</h2>
+            <p>地球是一個球體。如果地震波從北極出發，所有的波線繞著地球傳遞，最後會在哪裡相遇？答案是南極（對蹠點，Antipode，即震源正對面 180° 的位置）。由於幾何形狀的關係，大量的射線能量會在那裡重新匯聚，導致振幅異常增強！</p>
+            <div class="interactive-box">
+                <h3>對蹠點聚焦動畫</h3>
+                <p>觀察能量如何從上方震源擴散，最終在底部匯聚。</p>
+                <div class="svg-container" style="background:transparent; height: 250px;">
+                    <svg viewBox="0 0 200 200" width="100%" height="100%">
+                        <circle cx="100" cy="100" r="90" fill="none" stroke="#2c3e50" stroke-width="2"/>
+                        <circle cx="100" cy="10" r="4" fill="#f39c12"/> <!-- 震源 -->
+                        <!-- 射線 -->
+                        <path d="M 100 10 A 90 90 0 0 1 100 190" class="ray-path" style="stroke:#e74c3c; animation-duration: 2s; animation-iteration-count: infinite;"/>
+                        <path d="M 100 10 A 90 90 0 0 0 100 190" class="ray-path" style="stroke:#e74c3c; animation-duration: 2s; animation-iteration-count: infinite;"/>
+                        <circle cx="100" cy="190" r="6" fill="#e74c3c" opacity="0">
+                            <animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.9;0.95;1" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="r" values="6;20;6" dur="2s" repeatCount="indefinite"/>
+                        </circle>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 12 -->
+        <section id="sec12">
+            <h2>12. Upper Mantle Structure：低速帶與高速帶</h2>
+            <p>上部地函的速度結構非常複雜。在岩石圈 (Lithosphere) 之下，通常存在一個<strong>低速帶 (Low-Velocity Zone, LVZ)</strong>，這對應於軟流圈 (Asthenosphere)。低速通常意味著高溫、可能存在部分熔融或水，使得岩石變軟。</p>
+            <p>而在更深處 (如 410km, 660km)，壓力造成礦物相變 (如橄欖石變成尖晶石結構)，使得密度與波速急劇跳升，形成<strong>高速帶</strong>。</p>
+            <div class="interactive-box">
+                <h3>上部地函速度剖面圖 (概念示意)</h3>
+                <svg width="100%" height="300" style="background:#fff; border:1px solid #ccc;">
+                    <!-- 坐標軸 -->
+                    <line x1="50" y1="20" x2="50" y2="280" stroke="#000" stroke-width="2"/>
+                    <line x1="50" y1="20" x2="350" y2="20" stroke="#000" stroke-width="2"/>
+                    <text x="360" y="25" font-size="12">波速 (km/s)</text>
+                    <text x="10" y="280" font-size="12">深度</text>
+                    
+                    <!-- 速度曲線 -->
+                    <path d="M 50 20 L 150 40 L 120 100 L 180 180 L 250 180 L 280 280" fill="none" stroke="#2980b9" stroke-width="3"/>
+                    
+                    <!-- 標籤 -->
+                    <text x="160" y="40" fill="#333" font-size="12">岩石圈 (堅硬快速)</text>
+                    <text x="130" y="100" fill="#e74c3c" font-size="12">LVZ (軟流圈低速)</text>
+                    <text x="260" y="180" fill="#2ecc71" font-size="12">410km 不連續面 (急增)</text>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Section 13 -->
+        <section id="sec13">
+            <h2>13. 各向異性 (Anisotropic Earth Structure)</h2>
+            <p>你以為岩石在各個方向傳遞地震波的速度都一樣嗎？其實不然！<strong>各向異性 (Anisotropy)</strong> 是指波速會隨著「傳播方向」或「偏振方向」而改變。</p>
+            <p>這通常是因為地函中的礦物 (特別是橄欖石) 在長時間板塊運動與地函熱對流的應力擠壓下，晶格發生了定向排列 (LPO)。這就像是木頭的紋理，順著紋理劈木頭比較快，逆著紋理比較慢！</p>
+        </section>
+
+        <!-- Section 14 -->
+        <section id="sec14">
+            <h2>14. 剪力波分離 (Shear Wave Splitting)</h2>
+            <p>這是各向異性最明顯的證據！當一個 S波 (剪力波) 進入各向異性介質時，它會「被迫」分裂成兩個互相垂直的波：</p>
+            <ul>
+                <li><strong>快波 (Fast shear wave)</strong>：偏振方向平行於礦物排列方向，跑得快。</li>
+                <li><strong>慢波 (Slow shear wave)</strong>：偏振方向垂直於礦物排列方向，跑得慢。</li>
+            </ul>
+            <p>當它們離開該區域時，快波會比慢波早到達，兩者的時間差稱為 <strong>Delay time</strong>。快波的方向則指示了地函流動的方向！</p>
+        </section>
+
+        <!-- Section 15 -->
+        <section id="sec15">
+            <h2>15. 為何使用 SKS 波相研究剪力波分離？</h2>
+            <p>SKS 是一個超級好用的波相！它的路徑是：地函(S) -> 外核(P) -> 地函(S)。</p>
+            <p>為什麼它好用？因為外核是液體，只允許 P波通過。所以 S波進入外核變成 P波，出來再變回 S波時，它原本在地函的偏振狀態就被「洗掉」了。出核後的 S波會是純粹的 SV 偏振。這樣一來，如果在測站記錄到它發生了剪力波分離，我們就可以100%確定，這個各向異性一定是發生在接收站下方的上部地函！</p>
+            <div class="interactive-box" style="background:#fff;">
+                <h3>SKS 研究流程圖</h3>
+                <p>地震發生 <i class="fas fa-arrow-right"></i> 穿過外核(洗掉記憶) <i class="fas fa-arrow-right"></i> 到達測站下方 <i class="fas fa-arrow-right"></i> <strong>進入各向異性層</strong> <i class="fas fa-arrow-right"></i> <strong>剪力波分離</strong> <i class="fas fa-arrow-right"></i> 量測快波方向與時間差</p>
+            </div>
+        </section>
+
+        <!-- Section 16 -->
+        <section id="sec16">
+            <h2>16. 圖表解析：圖 3.6-1 與 圖 3.6-7</h2>
+            <p>讓我們透過實際圖表來理解剪力波分離。</p>
+            
+            <div class="figure-container">
+                <div class="figure-img">
+                    <img src="https://raw.githubusercontent.com/rrrnnn0518-ux/sesmology_ch3/main/docs/3.6-1.png" alt="圖 3.6-1">
+                </div>
+                <div class="figure-desc">
+                    <h3>圖 3.6-1：剪力波分裂示意圖</h3>
+                    <p>當具有單一極化方向的剪力波（S波）穿過非均向性介質（Anisotropic medium）時，會因介質在不同方向的波速差異，分裂成互相垂直的快波（S1）與慢波（S2）。快波沿波速較快方向傳播，慢波則沿較慢方向傳播，導致兩者產生時間差。</p>
+                    <p><i class="fas fa-eye"></i> <strong>看圖提示：</strong>注意看中間虛線區，S波分裂成了兩個，離開虛線區後兩者保持著固定的距離(時間差)。</p>
+                </div>
+            </div>
+
+            <div class="figure-container">
+                <div class="figure-img">
+                    <img src="https://raw.githubusercontent.com/rrrnnn0518-ux/sesmology_ch3/main/docs/3.6-7.png" alt="圖 3.6-7">
+                </div>
+                <div class="figure-desc">
+                    <h3>圖 3.6-7：SKS 剪力波分裂校正</h3>
+                    <p>展示利用 SKS 波進行剪力波分裂分析與校正的過程。圖(a)顯示未校正波在徑向與切向分量皆有能量；中間為旋轉波形，可見時間差；圖(b)的質點運動軌跡顯示，未校正波呈橢圓極化，經校正後恢復成線極化，成功消除非均向性的影響。</p>
+                    <p><i class="fas fa-eye"></i> <strong>看圖提示：</strong>看圖 b 最明顯，原本亂七八糟的橢圓圈圈，經過數學反推修正後，變成了一條漂亮的直線，這代表我們成功找到了地下的真實快慢波方向與時間差！</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 17 -->
+        <section id="sec17">
+            <h2>17. 波傳遞時能量如何衰減？</h2>
+            <p>為什麼遠處的地震我們感覺不到？因為能量在傳遞過程中衰減了。主要機制有四種：</p>
+            <ol>
+                <li><strong>幾何擴散 (Geometric spreading)</strong>：能量像吹氣球一樣擴散到更大的球面上，單位面積能量變小。</li>
+                <li><strong>介質吸收 (Intrinsic attenuation)</strong>：岩石摩擦生熱，把震波的動能變成了熱能 (這才是真的能量損失)。</li>
+                <li><strong>散射 (Scattering)</strong>：遇到破碎帶，能量被亂反射到四面八方。</li>
+                <li><strong>多路徑效應 (Multipathing)</strong>：能量被分散到不同的折射/反射路徑上。</li>
+            </ol>
+            <p>頻率越高，波長越短，越容易被吸收或散射。所以距離越遠，高頻成分掉得越快，波形看起來就變得「圓滑、寬大」。</p>
+            
+            <div class="interactive-box">
+                <h3>能量衰減模擬器</h3>
+                <p>拖曳滑桿增加傳播距離，觀察振幅變化。高頻率波形的振幅會衰減得比低頻更快。</p>
+                <input type="range" id="distSlider" min="10" max="200" value="10" oninput="drawWave()" style="width:80%;">
+                <p>距離: <span id="distVal" class="slider-value">10 km</span></p>
+                <canvas id="waveCanvas" width="500" height="150" style="background:#fff; border:1px solid #ccc; max-width:100%;"></canvas>
+                <script>
+                    function drawWave() {
+                        const canvas = document.getElementById('waveCanvas');
+                        const ctx = canvas.getContext('2d');
+                        const dist = document.getElementById('distSlider').value;
+                        document.getElementById('distVal').innerText = dist + " km";
+                        
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 75);
+                        
+                        // 簡單模擬：距離越遠振幅越小，且波長稍微拉長(模擬高頻衰減)
+                        const amplitude = 50 * Math.exp(-dist * 0.015); 
+                        const frequency = 0.1 - (dist * 0.0002);
+                        
+                        for(let x=0; x<canvas.width; x++) {
+                            // 使用 Sinc 函數模擬地震子波
+                            const t = x - 250;
+                            let y = 75;
+                            if(t !== 0) {
+                                y = 75 - amplitude * Math.sin(frequency * t) / (frequency * t) * 5;
+                            } else {
+                                y = 75 - amplitude * 5;
+                            }
+                            ctx.lineTo(x, y);
+                        }
+                        ctx.strokeStyle = '#e74c3c';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                    // 初始化
+                    setTimeout(drawWave, 100);
+                </script>
+            </div>
+        </section>
+
+        <!-- Section 18 -->
+        <section id="sec18">
+            <h2>18. 圖表解析：圖 3.7-1</h2>
+            <div class="figure-container">
+                <div class="figure-img">
+                    <img src="https://raw.githubusercontent.com/rrrnnn0518-ux/sesmology_ch3/main/docs/3.7-1.png" alt="圖 3.7-1">
+                </div>
+                <div class="figure-desc">
+                    <h3>圖 3.7-1：距離與波形複雜度</h3>
+                    <p>比較了同一地震在兩個不同距離測站的地震波形。上方距離較近，P波波形相對簡單；下方距離較遠。遠距離測站的紀錄不僅振幅變小，其尾波（Coda）也變得極為複雜且持續時間較長。這種波形複雜度的增加，肇因於地震波在長距離傳播時，經歷了地球內部非均質構造的多次散射與反射。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 19 -->
+        <section id="sec19">
+            <h2>19. 圖表解析：圖 3.7-5</h2>
+            <div class="figure-container">
+                <div class="figure-img">
+                    <img src="https://raw.githubusercontent.com/rrrnnn0518-ux/sesmology_ch3/main/docs/3.7-5.png" alt="圖 3.7-5">
+                </div>
+                <div class="figure-desc">
+                    <h3>圖 3.7-5：聚焦與散焦效應</h3>
+                    <p>示意了地震波穿透非均質介質時的聚焦與散焦效應。左側平面波通過中間不規則的「透鏡」（代表地下波速異常區域）時發生折射。右側顯示在射線密集交會區，能量集中導致振幅放大（聚焦）；而在射線散開區，能量稀疏導致振幅減弱（散焦）。此現象解釋了為何相同震央距的不同測站，振幅會有巨大差異。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 20 -->
+        <section id="sec20">
+            <h2>20. 圖表解析：圖 3.7-10</h2>
+            <div class="figure-container">
+                <div class="figure-img">
+                    <img src="https://raw.githubusercontent.com/rrrnnn0518-ux/sesmology_ch3/main/docs/3.7-10.png" alt="圖 3.7-10">
+                </div>
+                <div class="figure-desc">
+                    <h3>圖 3.7-10：地震與月震波形對比</h3>
+                    <p>對比地球地震（上）與月震（下）的波形差異。地球上的地震波能量迅速衰減，因為地球內部含流體且溫度高，易吸收震波能量（高衰減）。相反地，月震波形衰減極慢，尾波可持續長達一小時以上。這是由於月球內部極度乾燥、缺乏流體且溫度低，加上表層岩石破碎造成強烈散射，使地震波幾乎不被吸收（極低衰減、高 Q 值）。</p>
+                    <p><i class="fas fa-lightbulb"></i> <strong>向同學說明：</strong>月球就像一個乾燥的破鐘，敲一下會嗡嗡響個不停；地球像個裝水的海綿鐘，敲一下聲音很快就被吸掉了。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 21 -->
+        <section id="sec21">
+            <h2>21. 圖表解析：圖 3.7-18</h2>
+            <div class="figure-container">
+                <div class="figure-img">
+                    <img src="https://raw.githubusercontent.com/rrrnnn0518-ux/sesmology_ch3/main/docs/3.7-18.png" alt="圖 3.7-18">
+                </div>
+                <div class="figure-desc">
+                    <h3>圖 3.7-18：美國 Q 值分佈圖</h3>
+                    <p>展示美國本土的 $Q_{Lg}$ 值分佈圖。Q 值（品質因子）與衰減程度成反比：數值越低代表衰減越強。從圖中可明顯看出地質差異：在構造活動頻繁、地熱較高的美國西部，Q 值普遍較低（圓圈區），顯示衰減強。相反地，在構造穩定、古老且堅硬的美國中東部，Q 值較高（十字區），代表震波能量不易散失。</p>
+                    <p><i class="fas fa-microphone"></i> <strong>報告建議講法：</strong>這張圖完美結合了地質與地震學。西部是洛磯山脈、黃石公園，又熱又破碎，震波跑不遠(Q低)；東部是古老堅硬的北美地盾，震波可以傳遞到很遠的地方(Q高)。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 22 -->
+        <section id="sec22">
+            <h2>22. 總結與複習</h2>
+            
+            <div class="grid" style="margin-bottom:30px;">
+                <div class="card" style="background:var(--code-bg); border-left: 5px solid #27ae60;">
+                    <h3 style="color:#27ae60; margin-top:0;"><i class="fas fa-book"></i> 本章觀念總表</h3>
+                    <ul style="padding-left:20px; margin:0;">
+                        <li><strong>速度介面：</strong> Moho (地殼/地函), CMB (地函/外核), ICB (外核/內核)</li>
+                        <li><strong>波線特徵：</strong> 高速帶導致三叉現象，低速帶導致影區。</li>
+                        <li><strong>核相 (Core phases)：</strong> K(外核P), I(內核P), J(內核S)。</li>
+                        <li><strong>各向異性：</strong> 剪力波分離 (快波/慢波)，反映地函流動。</li>
+                        <li><strong>衰減：</strong> 幾何擴散、散射、吸收。Q值越大越不衰減。</li>
+                    </ul>
+                </div>
+                <div class="card" style="background:var(--code-bg); border-left: 5px solid #f39c12;">
+                    <h3 style="color:#f39c12; margin-top:0;"><i class="fas fa-bullhorn"></i> 上台報告精華整理</h3>
+                    <p style="margin:0 0 10px 0;">報告時可以強調以下 3 個 Storyline：</p>
+                    <ol style="padding-left:20px; margin:0;">
+                        <li>我們如何靠 <strong>Pn/PmP</strong> 發現地殼厚度 (Moho)？</li>
+                        <li>我們如何靠 <strong>P波/S波影區</strong> 發現液態外核？</li>
+                        <li>我們如何靠 <strong>SKS剪力波分離</strong> 發現地函其實是在流動的？</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="interactive-box" style="text-align:left;">
+                <h3 style="text-align:center;"><i class="fas fa-question-circle"></i> 互動小測驗</h3>
+                <p style="text-align:center; margin-bottom:20px;">點擊選項作答，測試你對第三章的了解！</p>
+                
+                <div id="quiz-container"></div>
+                
+                <script>
+                    const quizData = [
+                        { q: "1. 發現 Moho 面主要是透過觀察哪兩種波的走時交叉？", options: ["Pg 與 PmP", "Pg 與 Pn", "P波 與 S波", "PcP 與 ScS"], ans: 1, exp: "正確！Pg 是地殼直達波，Pn 是地函頂部折射波，兩者走時曲線的交叉距離證明了高速地函的存在。" },
+                        { q: "2. 在球對稱地球中，哪一個物理量沿著射線路徑是守恆的？", options: ["波速 v", "入射角 i", "射線參數 p", "波長 λ"], ans: 2, exp: "正確！射線參數 p = (r*sin i)/v，在球對稱模型中沿射線不變。" },
+                        { q: "3. 地震波遇到「低速帶」時，會產生什麼現象？", options: ["三叉現象", "波線急劇向上彎曲", "影區 (Shadow Zone)", "振幅無限大"], ans: 2, exp: "正確！低速帶會讓波線向下彎折(遠離地表)，導致地表某區段接收不到訊號，形成影區。" },
+                        { q: "4. S 波無法穿透哪一層地球構造？", options: ["岩石圈", "軟流圈", "外核", "內核"], ans: 2, exp: "正確！外核是液態，剪力模量為零，S 波無法穿透。" },
+                        { q: "5. 震相 PKIKP 代表什麼路徑？", options: ["穿透外核的P波", "穿透內核的P波", "在核幔邊界反射的P波", "穿透內核的S波"], ans: 1, exp: "正確！P(地函) -> K(外核) -> I(內核) -> K(外核) -> P(地函)。" },
+                        { q: "6. 關於「各向異性」與「剪力波分離」，何者正確？", options: ["只發生在液體中", "S波會分裂成快波與慢波", "P波會分裂成快波與慢波", "會讓地震波能量完全消失"], ans: 1, exp: "正確！剪力波(S波)進入各向異性介質會分裂成偏振互相垂直的快波與慢波。" },
+                        { q: "7. 為什麼 SKS 波常用來研究接收站下方的各向異性？", options: ["因為它振幅最大", "因為外核洗掉了S波原本的偏振狀態", "因為它跑得最快", "因為它只在美國出現"], ans: 1, exp: "正確！S波進入液態外核變成P波，出來變回S波時是純粹的SV極化，之後若發生分裂，必定是接收站下方的構造造成的。" },
+                        { q: "8. Q 值 (品質因子) 越低代表什麼？", options: ["地震規模越小", "能量衰減越慢", "能量衰減越快", "波速越快"], ans: 2, exp: "正確！Q 值與衰減成反比。Q值越低，衰減越強(越快)；Q值越高，能量越不容易散失。" }
+                    ];
+                    
+                    const qCont = document.getElementById('quiz-container');
+                    quizData.forEach((item, index) => {
+                        let html = `<div style="margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                                        <h4 style="margin-top:0;">${item.q}</h4>`;
+                        item.options.forEach((opt, optIdx) => {
+                            html += `<div class="quiz-option" onclick="checkAns(this, ${index}, ${optIdx})">${opt}</div>`;
+                        });
+                        html += `<div id="exp-${index}" class="quiz-explanation">${item.exp}</div></div>`;
+                        qCont.innerHTML += html;
+                    });
+                    
+                    function checkAns(element, qIdx, optIdx) {
+                        const siblings = element.parentNode.querySelectorAll('.quiz-option');
+                        siblings.forEach(el => { el.onclick = null; el.style.cursor = 'default'; });
+                        
+                        if(optIdx === quizData[qIdx].ans) {
+                            element.classList.add('quiz-correct');
+                        } else {
+                            element.classList.add('quiz-wrong');
+                            siblings[quizData[qIdx].ans].classList.add('quiz-correct');
+                        }
+                        document.getElementById('exp-' + qIdx).style.display = 'block';
+                    }
+                </script>
+            </div>
+        </section>
+
+
+    </main>
+</div>
+<button id="backToTop" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button>
+
+<script>
+    // 深淺色切換
+    function toggleTheme() {
+        const body = document.body;
+        if(body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+    
+    // 初始化主題
+    if(localStorage.getItem('theme') === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+    }
+
+    // 自動生成目錄
+    const sections = document.querySelectorAll('section');
+    const toc = document.getElementById('toc');
+    sections.forEach((sec, index) => {
+        const id = 'sec' + (index + 1);
+        sec.id = id;
+        const title = sec.querySelector('h2').innerText;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + id;
+        a.innerText = title;
+        li.appendChild(a);
+        toc.appendChild(li);
+    });
+
+    // 滾動監聽與返回頂部
+    window.onscroll = function() {
+        // 顯示/隱藏返回頂部按鈕
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            document.getElementById("backToTop").style.display = "block";
+        } else {
+            document.getElementById("backToTop").style.display = "none";
+        }
+        
+        // TOC active state
+        let current = "";
+        sections.forEach((section) => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 100) {
+                current = section.getAttribute("id");
+            }
+        });
+        document.querySelectorAll(".sidebar a").forEach((li) => {
+            li.classList.remove("active");
+            if (li.getAttribute("href").includes(current)) {
+                li.classList.add("active");
+            }
+        });
+    };
+    
+    function scrollToTop() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+</script>
+</body>
+</html>
